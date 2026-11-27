@@ -471,18 +471,39 @@ code {
 
 .lang-item {
   display: grid;
-  grid-template-columns: 100px 1fr 102px;
+  grid-template-columns: 32px 1fr 102px;
   align-items: center;
   gap: 12px;
   font-size: 13px;
 }
 
-.lang-name {
-  font-weight: 500;
+.lang-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 20px;
+  line-height: 1;
   color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.lang-logo-fallback {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ledger-val .lang-logo {
+  font-size: 22px;
 }
 
 .lang-track {
@@ -570,6 +591,6 @@ code {
     margin: 28px 0;
   }
   .lang-item {
-    grid-template-columns: 84px 1fr 88px;
+    grid-template-columns: 28px 1fr 88px;
   }
 }

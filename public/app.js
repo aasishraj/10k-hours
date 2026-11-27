@@ -16,6 +16,45 @@
     return Number(n || 0).toLocaleString();
   }
 
+  const DEVICON_MAP = {
+    typescript: "devicon-typescript-plain colored",
+    python: "devicon-python-plain colored",
+    javascript: "devicon-javascript-plain colored",
+    astro: "devicon-astro-plain",
+    "c++": "devicon-cplusplus-plain colored",
+    cpp: "devicon-cplusplus-plain colored",
+    css: "devicon-css3-plain colored",
+    c: "devicon-c-original colored",
+    markdown: "devicon-markdown-original",
+    html: "devicon-html5-plain colored",
+    bash: "devicon-bash-plain",
+    shell: "devicon-bash-plain",
+    sh: "devicon-bash-plain",
+    go: "devicon-go-plain colored",
+    rust: "devicon-rust-original",
+    dockerfile: "devicon-docker-plain colored",
+    docker: "devicon-docker-plain colored",
+    java: "devicon-java-plain colored",
+    react: "devicon-react-original colored",
+    svelte: "devicon-svelte-plain colored",
+    ruby: "devicon-ruby-plain colored",
+    php: "devicon-php-plain colored",
+    swift: "devicon-swift-plain colored",
+    kotlin: "devicon-kotlin-plain colored",
+    yaml: "devicon-yaml-plain",
+    json: "devicon-json-plain",
+  };
+
+  function renderLangLogo(langName) {
+    const safeName = escapeHtml(langName);
+    const cls = DEVICON_MAP[String(langName || "").toLowerCase()];
+    if (cls) {
+      return `<i class="lang-logo ${cls}" title="${safeName}" aria-label="${safeName}"></i>`;
+    }
+    const initials = String(langName || "?").replace(/[^a-zA-Z0-9]/g, "").slice(0, 2).toUpperCase() || "?";
+    return `<span class="lang-logo-fallback" title="${safeName}" aria-label="${safeName}">${escapeHtml(initials)}</span>`;
+  }
+
   function escapeHtml(str) {
     return String(str)
       .replace(/&/g, "&amp;")
@@ -135,7 +174,7 @@ let isScrolling = false;
     $("kpi-time-sub").textContent = `${summary.active_days} active days`;
 
     if (languages.length > 0) {
-      $("kpi-lang").textContent = languages[0].language;
+      $("kpi-lang").innerHTML = renderLangLogo(languages[0].language);
       $("kpi-lang-sub").textContent = `${languages[0].percent}% share · ${languages.length} total`;
     } else {
       $("kpi-lang").textContent = "—";
@@ -630,8 +669,8 @@ let isScrolling = false;
       .map((l) => {
         const relativeW = (l.percent / maxPct) * 100;
         return `
-          <div class="lang-item">
-            <span class="lang-name" title="${escapeHtml(l.language)}">${escapeHtml(l.language)}</span>
+          <div class="lang-item" title="${escapeHtml(l.language)}">
+            ${renderLangLogo(l.language)}
             <div class="lang-track">
               <div class="lang-fill" style="width: ${relativeW.toFixed(1)}%"></div>
             </div>
