@@ -57,6 +57,7 @@ function getDb() {
   if (!cols.some((c) => c.name === "source")) {
     db.exec("ALTER TABLE daily_stats ADD COLUMN source TEXT NOT NULL DEFAULT 'wakatime';");
   }
+  db.exec("DELETE FROM daily_stats WHERE source != 'wakatime';");
 
   return db;
 }
