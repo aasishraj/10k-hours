@@ -1,0 +1,15 @@
+{
+  "name": "wakatime-10k-tracker",
+  "version": "1.0.0",
+  "description": "Lightweight local WakaTime 10,000-hour mastery tracker with SQLite storage",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --no-warnings src/server.js",
+    "sync": "node --no-warnings src/sync.js",
+    "import:github": "node --no-warnings src/github-import.js",
+    "dev": "node --no-warnings --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

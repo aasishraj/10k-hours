@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>10,000 Hours</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      const saved = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+    })();
+  </script>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="canvas">
+    <div class="masthead">
+      <div class="masthead-left">
+        <span class="title-serif">Ten Thousand Hours</span>
+        <span class="status-pill"><i class="pulse-dot"></i><span id="last-sync-label">Auto-syncing</span></span>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme">
+        <span id="theme-icon">☾</span>
+      </button>
+    </div>
+
+    <div id="token-banner" class="notice hidden">
+      <span>
+        <strong>WakaTime sync paused:</strong> Set <code>WAKATIME_TOKEN</code> in <code>.env</code> (from
+        <a href="https://wakatime.com/oauth" target="_blank" rel="noopener">wakatime.com/oauth</a>) and restart.
+      </span>
+    </div>
+
+    <!-- Hero: Asymmetric Instrument + Telemetry Ledger (cardless) -->
+    <section class="hero-grid" aria-label="10,000 hour mastery overview">
+      <div class="hero-primary">
+        <div class="panel-label">Mastery Progress</div>
+
+        <div class="hero-readout">
+          <span id="mastery-total" class="hero-num">0.0</span>
+          <div class="hero-unit-col">
+            <span class="hero-denom">/ <span id="mastery-target">10,000</span> hrs</span>
+            <span id="mastery-percent-pill" class="hero-pct">0.00%</span>
+          </div>
+        </div>
+
+        <div class="ruler-wrap">
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="mastery-progressbar">
+            <div id="mastery-bar" class="progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="ruler-ticks" aria-hidden="true">
+            <span style="left: 0%">0</span>
+            <span style="left: 10%">1k</span>
+            <span style="left: 25%">2.5k</span>
+            <span style="left: 50%">5k</span>
+            <span style="left: 75%">7.5k</span>
+            <span style="left: 100%">10k</span>
+          </div>
+        </div>
+
+        <div class="hero-footnotes">
+          <span id="mastery-remaining-line">—</span>
+          <span id="mastery-pace-line">—</span>
+        </div>
+      </div>
+
+      <div class="ledger" aria-label="Core metrics">
+        <div class="panel-label">Telemetry</div>
+        <div class="ledger-rows">
+          <div class="ledger-row">
+            <div class="ledger-key">
+              <span class="ledger-title">Time Spent</span>
+              <span id="kpi-time-sub" class="ledger-sub">0 active days</span>
+            </div>
+            <span id="kpi-time" class="ledger-val">0h 0m</span>
+          </div>
+          <div class="ledger-row">
+            <div class="ledger-key">
+              <span class="ledger-title">Top Language</span>
+              <span id="kpi-lang-sub" class="ledger-sub">0 languages</span>
+            </div>
+            <span id="kpi-lang" class="ledger-val">—</span>
+          </div>
+          <div class="ledger-row">
+            <div class="ledger-key">
+              <span class="ledger-title">AI Written</span>
+              <span id="kpi-ai-sub" class="ledger-sub">+0 / -0</span>
+            </div>
+            <span id="kpi-ai" class="ledger-val tone-ai">0</span>
+          </div>
+          <div class="ledger-row">
+            <div class="ledger-key">
+              <span class="ledger-title">Human Written</span>
+              <span id="kpi-human-sub" class="ledger-sub">+0 / -0</span>
+            </div>
+            <span id="kpi-human" class="ledger-val tone-human">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="chapter-rule" />
+
+    <!-- Activity & 52-Week Heatmap -->
+    <section class="section" aria-label="Coding activity">
+      <div class="section-head">
+        <div>
+          <span class="panel-label">Activity</span>
+          <p id="time-readout" class="readout">Hover to inspect</p>
+        </div>
+        <div class="segmented" role="group" aria-label="Time granularity">
+          <button class="seg-btn active" data-view="monthly">Monthly</button>
+          <button class="seg-btn" data-view="30d">30 Days</button>
+        </div>
+      </div>
+
+      <div id="time-chart" class="chart-surface"></div>
+
+      <div class="heatmap-block">
+        <div class="heatmap-head">
+          <span id="heatmap-readout" class="mono-meta">Last 52 weeks</span>
+          <div class="heatmap-scale" aria-hidden="true">
+            <span class="mono-meta">0h</span>
+            <i class="hm-cell hm-0"></i>
+            <i class="hm-cell hm-1"></i>
+            <i class="hm-cell hm-2"></i>
+            <i class="hm-cell hm-3"></i>
+            <i class="hm-cell hm-4"></i>
+            <span class="mono-meta">5h+</span>
+          </div>
+        </div>
+        <div id="heatmap-chart" class="heatmap-surface"></div>
+      </div>
+    </section>
+
+    <hr class="chapter-rule" />
+
+    <!-- Bottom Split: Language Split + AI vs Human -->
+    <section class="split-grid">
+      <div class="section" aria-label="Programming language split">
+        <div class="section-head">
+          <div>
+            <span class="panel-label">Language Split</span>
+            <p id="lang-total-label" class="readout">0 hrs total</p>
+          </div>
+        </div>
+        <div id="languages-list" class="lang-bars"></div>
+      </div>
+
+      <div class="section" aria-label="AI versus human code">
+        <div class="section-head">
+          <div>
+            <span class="panel-label">Code Authorship</span>
+            <p id="code-readout" class="readout">WakaTime tracked lines</p>
+          </div>
+        </div>
+
+        <div class="ratio-block">
+          <div class="ratio-bar">
+            <div id="split-human-bar" class="ratio-human" style="width: 50%"></div>
+            <div id="split-ai-bar" class="ratio-ai" style="width: 50%"></div>
+          </div>
+          <div class="ratio-legend">
+            <span id="split-human-label"><i class="swatch swatch-human"></i>Human 0%</span>
+            <span id="split-ai-label"><i class="swatch swatch-ai"></i>AI 0%</span>
+          </div>
+        </div>
+
+        <div id="code-chart" class="chart-surface"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
