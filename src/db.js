@@ -188,6 +188,14 @@ function hasAnyWakaTimeData() {
   return (row?.cnt || 0) > 0;
 }
 
+function hasAnyGitHubData() {
+  const conn = getDb();
+  const row = conn
+    .prepare("SELECT COUNT(*) AS cnt FROM daily_stats WHERE source = 'github_estimate'")
+    .get();
+  return (row?.cnt || 0) > 0;
+}
+
 function upsertGitHubEstimateDays(entries) {
   const conn = getDb();
   const syncedAt = new Date().toISOString();
@@ -403,6 +411,7 @@ module.exports = {
   logSync,
   hasDateSynced,
   hasAnyWakaTimeData,
+  hasAnyGitHubData,
   upsertGitHubEstimateDays,
   getDashboardData,
 };

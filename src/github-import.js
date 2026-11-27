@@ -2,12 +2,40 @@ const { execFileSync } = require("node:child_process");
 const { upsertGitHubEstimateDays, logSync } = require("./db");
 const { getDayBeforeYesterday } = require("./wakatime");
 
-function getGitHubLogin() {
+async function githubGraphql(query, variables = {}) {
+  const token = (process.env.GITHUB_TOKEN || "").trim();
+  if (token) {
+    const res = await fetch("https://api.github.com/graphql", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "User-Agent": "10k-hours-tracker",
+      },
+      body: JSON.stringify({ query, variables }),
+    });
+    if (!res.ok) {
+      throw new Error(`GitHub GraphQL error (${res.status}): ${await res.text()}`);
+    }
+    const json = await res.json();
+    if (json.errors) {
+      throw new Error(`GitHub GraphQL error: ${JSON.stringify(json.errors)}`);
+    }
+    return json.data;
+  }
+
+  const args = ["api", "graphql", "-f", `query=${query}`];
+  for (const [k, v] of Object.entries(variables)) {
+    args.push("-F", `${k}=${v}`);
+  }
+  const raw = execFileSync("gh", args, { encoding: "utf8" });
+  return JSON.parse(raw).data;
+}
+
+async function getGitHubLogin() {
   if (process.env.GITHUB_USERNAME) return process.env.GITHUB_USERNAME.trim();
-  const out = execFileSync("gh", ["api", "user", "--jq", ".login"], {
-    encoding: "utf8",
-  });
-  return out.trim();
+  const data = await githubGraphql("query { viewer { login } }");
+  return data.viewer.login;
 }
 
 function estimateSecondsFromContributions(count) {
@@ -17,7 +45,7 @@ function estimateSecondsFromContributions(count) {
   return Math.round(hours * 3600);
 }
 
-function fetchYearData(login, year) {
+async function fetchYearData(login, year) {
   const from = `${year}-01-01T00:00:00Z`;
   const to = `${year}-12-31T23:59:59Z`;
   const query = `
@@ -52,25 +80,8 @@ function fetchYearData(login, year) {
     }
   `;
 
-  const raw = execFileSync(
-    "gh",
-    [
-      "api",
-      "graphql",
-      "-f",
-      `query=${query}`,
-      "-F",
-      `login=${login}`,
-      "-F",
-      `from=${from}`,
-      "-F",
-      `to=${to}`,
-    ],
-    { encoding: "utf8" }
-  );
-
-  const parsed = JSON.parse(raw);
-  const collection = parsed?.data?.user?.contributionsCollection || {};
+  const data = await githubGraphql(query, { login, from, to });
+  const collection = data?.user?.contributionsCollection || {};
   const weeks = collection.contributionCalendar?.weeks || [];
   const days = [];
   for (const w of weeks) {
@@ -79,7 +90,6 @@ function fetchYearData(login, year) {
     }
   }
 
-  // Weight each repo's language byte share by commit count in that repo
   const langWeights = {};
   const repoContribs = collection.commitContributionsByRepository || [];
   for (const rc of repoContribs) {
@@ -111,8 +121,8 @@ function normalizeLanguageSplit(langWeights) {
     .slice(0, 10);
 }
 
-function importGitHubHistory(startYear = 2020) {
-  const login = getGitHubLogin();
+async function importGitHubHistory(startYear = 2020) {
+  const login = await getGitHubLogin();
   const currentYear = new Date().getFullYear();
   const cutoffDate = getDayBeforeYesterday();
 
@@ -120,7 +130,7 @@ function importGitHubHistory(startYear = 2020) {
   const globalLangWeights = {};
 
   for (let y = startYear; y <= currentYear; y++) {
-    const data = fetchYearData(login, y);
+    const data = await fetchYearData(login, y);
     yearlyResults.push({ year: y, ...data });
     for (const [lang, w] of Object.entries(data.langWeights)) {
       globalLangWeights[lang] = (globalLangWeights[lang] || 0) + w;
@@ -165,13 +175,15 @@ function importGitHubHistory(startYear = 2020) {
 }
 
 if (require.main === module) {
-  try {
-    const res = importGitHubHistory(2020);
-    console.log(JSON.stringify(res, null, 2));
-  } catch (err) {
-    console.error("GitHub import failed:", err.message);
-    process.exit(1);
-  }
+  (async () => {
+    try {
+      const res = await importGitHubHistory(2020);
+      console.log(JSON.stringify(res, null, 2));
+    } catch (err) {
+      console.error("GitHub import failed:", err.message);
+      process.exit(1);
+    }
+  })();
 }
 
 module.exports = { importGitHubHistory };

@@ -4,8 +4,10 @@ const path = require("node:path");
 const {
   getDb,
   getSetting,
+  hasAnyGitHubData,
   getDashboardData,
 } = require("./db");
+const { importGitHubHistory } = require("./github-import");
 const {
   getWakaTimeToken,
   getDayBeforeYesterday,
@@ -124,6 +126,14 @@ async function handleApi(req, res, url) {
 
 function startScheduler() {
   const runCheck = async () => {
+    try {
+      if (process.env.GITHUB_TOKEN && !hasAnyGitHubData()) {
+        const ghRes = await importGitHubHistory(2020);
+        console.log(`[auto-seed] Imported ${ghRes.active_days} GitHub days (~${ghRes.estimated_hours} hrs)`);
+      }
+    } catch (err) {
+      console.error("[auto-seed] GitHub import failed:", err.message);
+    }
     try {
       const res = await syncIfMissingDayBeforeYesterday();
       if (!res.skipped) {
